@@ -18,7 +18,12 @@ Use the canonical structured final-summary context as authoritative evidence.
 Do not invent activity, scores, feedback, achievements, or improvement.
 Do not output final_score, mentor_comments, or additional notes.
 Do not produce hiring/employment recommendations.
-Return only the five required string fields.
+Return only the required fields: introduction, training_summary,
+overall_performance_summary, learning_journey, main_achievements,
+goal_achievement, final_performance_summary, and weeks_and_tasks.
+For weeks_and_tasks, list every internship week from context and the tasks
+associated with that week. Prefer completed tasks; include incomplete tasks
+only when evidence shows they were assigned. Do not invent tasks.
 """.strip()
 
 
@@ -32,11 +37,14 @@ def generate_final_summary_structure(
         "final_final_summary_generation_prompt": final_final_summary_generation_prompt,
         "canonical_final_summary_context": context,
         "required_fields": [
+            "introduction",
+            "training_summary",
             "overall_performance_summary",
             "learning_journey",
             "main_achievements",
             "goal_achievement",
             "final_performance_summary",
+            "weeks_and_tasks",
         ],
     }
     messages = [

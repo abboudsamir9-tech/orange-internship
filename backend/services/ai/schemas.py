@@ -67,9 +67,26 @@ class GeneratedFinalSummaryPrompt(BaseModel):
     missing_context_notes: list[str] = Field(default_factory=list)
 
 
+class GeneratedFinalSummaryTaskItem(BaseModel):
+    title: str
+    status: str = ""
+    is_completed: bool = False
+    requirement_type: str = ""
+    score: int | None = None
+
+
+class GeneratedFinalSummaryWeek(BaseModel):
+    week_number: int
+    weekly_focus: str = ""
+    tasks: list[GeneratedFinalSummaryTaskItem] = Field(default_factory=list)
+
+
 class GeneratedFinalSummary(BaseModel):
+    introduction: str
+    training_summary: str
     overall_performance_summary: str
     learning_journey: str
     main_achievements: str
     goal_achievement: str
     final_performance_summary: str
+    weeks_and_tasks: list[GeneratedFinalSummaryWeek] = Field(default_factory=list)

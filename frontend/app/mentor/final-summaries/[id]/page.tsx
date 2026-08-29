@@ -71,11 +71,24 @@ export default function FinalSummaryDetailPage() {
     setMessage("");
     try {
       const updated = await updateFinalSummary(summary.id, {
+        introduction: content.introduction,
+        training_summary: content.trainingSummary,
         overall_performance_summary: content.overallPerformanceSummary,
         learning_journey: content.learningJourney,
         main_achievements: content.mainAchievements,
         goal_achievement: content.goalAchievement,
         final_performance_summary: content.finalPerformanceSummary,
+        weeks_and_tasks: content.weeksAndTasks.map((week) => ({
+          week_number: week.weekNumber,
+          weekly_focus: week.weeklyFocus,
+          tasks: week.tasks.map((task) => ({
+            title: task.title,
+            status: task.status,
+            is_completed: task.isCompleted,
+            requirement_type: task.requirementType || "",
+            score: task.score ?? null,
+          })),
+        })),
         mentor_comments: comments,
         additional_mentor_notes: mentorNotes,
       });
@@ -98,11 +111,24 @@ export default function FinalSummaryDetailPage() {
     setMessage("");
     try {
       await updateFinalSummary(summary.id, {
+        introduction: content.introduction,
+        training_summary: content.trainingSummary,
         overall_performance_summary: content.overallPerformanceSummary,
         learning_journey: content.learningJourney,
         main_achievements: content.mainAchievements,
         goal_achievement: content.goalAchievement,
         final_performance_summary: content.finalPerformanceSummary,
+        weeks_and_tasks: content.weeksAndTasks.map((week) => ({
+          week_number: week.weekNumber,
+          weekly_focus: week.weeklyFocus,
+          tasks: week.tasks.map((task) => ({
+            title: task.title,
+            status: task.status,
+            is_completed: task.isCompleted,
+            requirement_type: task.requirementType || "",
+            score: task.score ?? null,
+          })),
+        })),
         mentor_comments: comments,
         additional_mentor_notes: mentorNotes,
       });

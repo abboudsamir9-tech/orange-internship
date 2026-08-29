@@ -476,6 +476,8 @@ def generate_final_summary_pdf(summary, *, draft_watermark: bool = False):
     )
 
     sections = [
+        ("Introduction", _wrap_text(summary.introduction)),
+        ("Training Summary", _wrap_text(summary.training_summary)),
         ("Overall Performance Summary", _wrap_text(summary.overall_performance_summary)),
         ("Learning Journey", _wrap_text(summary.learning_journey)),
         ("Main Achievements", _bullet_lines(summary.main_achievements)),
@@ -489,6 +491,30 @@ def generate_final_summary_pdf(summary, *, draft_watermark: bool = False):
         for line in lines:
             story.append(Paragraph(str(line).replace("\n", "<br/>"), body_style))
 
+    weeks_and_tasks = summary.weeks_and_tasks or []
+    if weeks_and_tasks:
+        story.append(Paragraph("Weeks and Tasks Breakdown", heading_style))
+        for week in weeks_and_tasks:
+            week_number = week.get("week_number")
+            focus = week.get("weekly_focus") or ""
+            header = f"Week {week_number}"
+            if focus:
+                header = f"{header}: {focus}"
+            story.append(Paragraph(f"<b>{header}</b>", body_style))
+            tasks = week.get("tasks") or []
+            if not tasks:
+                story.append(Paragraph("No tasks recorded for this week.", body_style))
+                continue
+            for task in tasks:
+                title = task.get("title") or "Untitled task"
+                status = task.get("status") or ""
+                completed = "Completed" if task.get("is_completed") else "Not completed"
+                detail = f"• {title}"
+                extras = [item for item in [status, completed] if item]
+                if extras:
+                    detail = f"{detail} ({', '.join(extras)})"
+                story.append(Paragraph(detail, body_style))
+
     from services.week_performance import build_final_summary_week_performance
 
     week_performance = build_final_summary_week_performance(
@@ -500,6 +526,16 @@ def generate_final_summary_pdf(summary, *, draft_watermark: bool = False):
             week_performance, heading_style, body_style
         )
     )
+
+    mentor_name = ""
+    mentor = getattr(summary.program, "mentor", None)
+    if mentor is not None:
+        mentor_name = getattr(mentor, "full_name", "") or ""
+    story.append(Spacer(1, 0.35 * inch))
+    story.append(Paragraph("Signatures", heading_style))
+    story.append(Paragraph(f"<b>Mentor Name:</b> {mentor_name or '________________'}", body_style))
+    story.append(Spacer(1, 0.25 * inch))
+    story.append(Paragraph("<b>Mentor Signature:</b> ________________________", body_style))
 
     def _footer(canvas_obj, _doc):
         canvas_obj.saveState()

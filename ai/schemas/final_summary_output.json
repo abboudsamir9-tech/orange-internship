@@ -1,11 +1,24 @@
 {
-  "_comment": "Placeholder output schema. Not implemented.",
+  "introduction": "",
+  "training_summary": "",
   "overall_performance_summary": "",
   "learning_journey": "",
-  "main_achievements": [],
-  "skills_developed": [],
-  "strengths": [],
-  "areas_for_improvement": [],
+  "main_achievements": "",
   "goal_achievement": "",
-  "final_performance_summary": ""
+  "final_performance_summary": "",
+  "weeks_and_tasks": [
+    {
+      "week_number": 1,
+      "weekly_focus": "",
+      "tasks": [
+        {
+          "title": "",
+          "status": "",
+          "is_completed": false,
+          "requirement_type": "",
+          "score": null
+        }
+      ]
+    }
+  ]
 }

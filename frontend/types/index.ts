@@ -209,11 +209,24 @@ export interface FinalSummary {
   programId: string;
   status: AiContentStatus;
   content: {
+    introduction: string;
+    trainingSummary: string;
     overallPerformanceSummary: string;
     learningJourney: string;
     mainAchievements: string[];
     goalAchievement: string;
     finalPerformanceSummary: string;
+    weeksAndTasks: Array<{
+      weekNumber: number;
+      weeklyFocus: string;
+      tasks: Array<{
+        title: string;
+        status: string;
+        isCompleted: boolean;
+        requirementType?: string;
+        score?: number | null;
+      }>;
+    }>;
   };
     mentorFinalScore?: number;
   scoredWeeklyReportCount?: number;

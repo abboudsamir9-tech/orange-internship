@@ -33,9 +33,14 @@ Core rules for the prompt you produce:
 - Do not compare against other interns or include other interns' data.
 - Approved Weekly Reports are supporting evidence only; task/submission records are authoritative.
 - Mentor Comments and Additional Notes are manual and must not be generated.
-- Instruct the generator to produce ONLY these five string sections:
+- Instruct the generator to produce ONLY these sections:
+  introduction (formal introductory paragraph evaluating overall placement),
+  training_summary (high-level overview of core learnings, performance, and skill progression),
   overall_performance_summary, learning_journey, main_achievements,
-  goal_achievement, final_performance_summary.
+  goal_achievement, final_performance_summary,
+  and weeks_and_tasks (every internship week with the specific tasks for that week).
+- For weeks_and_tasks, require one entry per roadmap week from context, listing
+  task title/status/completion from supplied evidence only.
 - Do not instruct Strengths, Areas for Improvement, or hiring sections.
 
 Required output fields:
@@ -74,11 +79,14 @@ def build_final_summary_prompt(context: dict[str, Any]) -> GeneratedFinalSummary
             "missing_context_notes",
         ],
         "target_summary_sections": [
+            "introduction",
+            "training_summary",
             "overall_performance_summary",
             "learning_journey",
             "main_achievements",
             "goal_achievement",
             "final_performance_summary",
+            "weeks_and_tasks",
         ],
     }
     messages = [

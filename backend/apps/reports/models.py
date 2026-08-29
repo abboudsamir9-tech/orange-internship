@@ -86,6 +86,9 @@ class FinalInternshipSummary(models.Model):
     main_achievements = models.JSONField(default=list, blank=True)
     goal_achievement = models.TextField(blank=True)
     final_performance_summary = models.TextField(blank=True)
+    introduction = models.TextField(blank=True)
+    training_summary = models.TextField(blank=True)
+    weeks_and_tasks = models.JSONField(default=list, blank=True)
     final_score = models.DecimalField(
         max_digits=5,
         decimal_places=1,
