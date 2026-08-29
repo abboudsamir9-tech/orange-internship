@@ -33,11 +33,16 @@ def persist_generated_final_summary(
             )
 
         payload = {
+            "introduction": generated.introduction.strip(),
+            "training_summary": generated.training_summary.strip(),
             "overall_performance_summary": generated.overall_performance_summary.strip(),
             "learning_journey": generated.learning_journey.strip(),
             "main_achievements": text_to_list(generated.main_achievements),
             "goal_achievement": generated.goal_achievement.strip(),
             "final_performance_summary": generated.final_performance_summary.strip(),
+            "weeks_and_tasks": [
+                week.model_dump() for week in generated.weeks_and_tasks
+            ],
             "status": AiContentStatus.DRAFT,
             "generated_by_ai": True,
             "approved_by": None,

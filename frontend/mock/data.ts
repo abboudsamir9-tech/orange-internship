@@ -739,11 +739,30 @@ export const finalSummaries: FinalSummary[] = [
     additionalMentorNotes: "Strong ownership on the submission service module.",
     approvedAt: "2026-07-25T10:00:00Z",
     content: {
+      introduction:
+        "This summary formally evaluates Maya's placement in the backend internship program.",
+      trainingSummary:
+        "Core learnings spanned API design, testing discipline, and progressive ownership of service modules.",
       overallPerformanceSummary: "Maya completed the backend internship with consistent delivery.",
       learningJourney: "Progressed from guided tasks to independently owned endpoints.",
       mainAchievements: ["Shipped submission service module", "Improved API docs"],
       goalAchievement: "Met core internship goals for API ownership.",
       finalPerformanceSummary: "Ready for junior backend responsibilities with mentoring.",
+      weeksAndTasks: [
+        {
+          weekNumber: 1,
+          weeklyFocus: "API foundations",
+          tasks: [
+            {
+              title: "Auth endpoints",
+              status: "COMPLETED",
+              isCompleted: true,
+              requirementType: "REQUIRED",
+              score: 90,
+            },
+          ],
+        },
+      ],
     },
   },
   {
@@ -754,11 +773,28 @@ export const finalSummaries: FinalSummary[] = [
     pdfAvailable: false,
     additionalMentorNotes: "",
     content: {
+      introduction:
+        "This draft summary reviews the intern's placement progress through mid-program checkpoints.",
+      trainingSummary:
+        "Training to date emphasizes UI systems fundamentals with early component delivery.",
       overallPerformanceSummary: "Draft final summary placeholder for mid-program review.",
       learningJourney: "Building UI systems expertise across early weeks.",
       mainAchievements: ["Setup excellence", "Component delivery in progress"],
       goalAchievement: "On track toward program goals.",
       finalPerformanceSummary: "Pending completion of remaining weeks.",
+      weeksAndTasks: [
+        {
+          weekNumber: 1,
+          weeklyFocus: "Setup and foundations",
+          tasks: [
+            {
+              title: "Environment setup",
+              status: "COMPLETED",
+              isCompleted: true,
+            },
+          ],
+        },
+      ],
     },
   },
 ];

@@ -23,11 +23,14 @@ class FinalInternshipSummaryAdmin(admin.ModelAdmin):
     list_filter = ("status", "generated_by_ai")
     search_fields = ("intern__user__full_name", "program__title")
     readonly_fields = (
+        "introduction",
+        "training_summary",
         "overall_performance_summary",
         "learning_journey",
         "main_achievements",
         "goal_achievement",
         "final_performance_summary",
+        "weeks_and_tasks",
         "final_score",
         "mentor_comments",
         "additional_mentor_notes",

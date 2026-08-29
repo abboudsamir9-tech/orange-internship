@@ -52,6 +52,14 @@ def build_prompt() -> GeneratedFinalSummaryPrompt:
 
 def build_summary() -> GeneratedFinalSummary:
     return GeneratedFinalSummary(
+        introduction=(
+            "This formal summary evaluates the intern's overall placement across the "
+            "full internship period using supplied program evidence."
+        ),
+        training_summary=(
+            "Training covered core API and testing skills with clear progression from "
+            "guided early tasks toward more independent later work."
+        ),
         overall_performance_summary=(
             "The intern completed required work with consistent quality across the program."
         ),
@@ -65,6 +73,21 @@ def build_summary() -> GeneratedFinalSummary:
         final_performance_summary=(
             "Available evidence shows solid completion patterns without unsupported claims."
         ),
+        weeks_and_tasks=[
+            {
+                "week_number": 1,
+                "weekly_focus": "Foundations",
+                "tasks": [
+                    {
+                        "title": "API task",
+                        "status": "COMPLETED",
+                        "is_completed": True,
+                        "requirement_type": "REQUIRED",
+                        "score": 90,
+                    }
+                ],
+            }
+        ],
     )
 
 
@@ -312,6 +335,10 @@ class AIFinalSummaryTests(TestCase):
         self.assertEqual(response.data["mentor_comments"], "")
         self.assertEqual(response.data["additional_mentor_notes"], "")
         self.assertIn("overall_performance_summary", response.data)
+        self.assertIn("introduction", response.data)
+        self.assertIn("training_summary", response.data)
+        self.assertIn("weeks_and_tasks", response.data)
+        self.assertTrue(len(response.data["weeks_and_tasks"]) >= 1)
         self.assertNotIn("strengths", response.data)
         import json
 

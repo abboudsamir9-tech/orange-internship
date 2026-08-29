@@ -75,6 +75,30 @@ def _week_block(weeks: list[dict[str, Any]]) -> str:
     return "\n".join(parts)
 
 
+def _weeks_and_tasks_block(weeks_and_tasks: list[dict[str, Any]]) -> str:
+    if not weeks_and_tasks:
+        return "No week/task breakdown available.\n"
+    parts: list[str] = []
+    for week in weeks_and_tasks:
+        parts.append(
+            f"WEEK {week.get('week_number')}: {week.get('weekly_focus') or '(no focus)'}\n"
+            f"Dates: {week.get('start_date')} → {week.get('end_date')}\n"
+        )
+        tasks = week.get("tasks") or []
+        if not tasks:
+            parts.append("Tasks: (none assigned)\n")
+            continue
+        for index, task in enumerate(tasks, start=1):
+            parts.append(
+                f"  Task {index}: {task.get('title')}\n"
+                f"  Status: {task.get('status')}\n"
+                f"  Completed: {task.get('is_completed')}\n"
+                f"  Requirement: {task.get('requirement_type')}\n"
+                f"  Score: {task.get('score') if task.get('score') is not None else '(no score)'}\n"
+            )
+    return "\n".join(parts)
+
+
 def _weekly_report_block(reports: list[dict[str, Any]]) -> str:
     if not reports:
         return "No approved weekly reports available.\n"
@@ -187,6 +211,10 @@ def build_final_final_summary_generation_prompt(
         ),
         _section("ROADMAP WEEKS", _week_block(context.get("weeks") or [])),
         _section(
+            "WEEKS AND TASKS BY WEEK (AUTHORITATIVE FOR weeks_and_tasks)",
+            _weeks_and_tasks_block(context.get("weeks_and_tasks") or []),
+        ),
+        _section(
             "ACTUAL TASK / SUBMISSION / REVIEW EVIDENCE (FULL INTERNSHIP)",
             _task_block(context.get("tasks") or []),
         ),
@@ -209,12 +237,21 @@ def build_final_final_summary_generation_prompt(
         _section(
             "MANDATORY FINAL SUMMARY RULES",
             (
-                "Produce ONLY these string fields:\n"
+                "Produce ONLY these fields:\n"
+                "- introduction (formal introductory paragraph evaluating overall placement)\n"
+                "- training_summary (high-level overview of core learnings, performance, "
+                "and skill progression)\n"
                 "- overall_performance_summary\n"
                 "- learning_journey\n"
                 "- main_achievements\n"
                 "- goal_achievement\n"
-                "- final_performance_summary\n\n"
+                "- final_performance_summary\n"
+                "- weeks_and_tasks (array: one object per roadmap week with week_number, "
+                "weekly_focus, and tasks[{title, status, is_completed, requirement_type, score}])\n\n"
+                "For weeks_and_tasks:\n"
+                "- Include EVERY week from WEEKS AND TASKS BY WEEK / ROADMAP WEEKS.\n"
+                "- List tasks from supplied evidence only; do not invent tasks.\n"
+                "- Prefer completed tasks; include incomplete assigned tasks with accurate status.\n\n"
                 "Do NOT output final_score.\n"
                 "Do NOT output mentor_comments.\n"
                 "Do NOT output additional_notes / additional_mentor_notes.\n"

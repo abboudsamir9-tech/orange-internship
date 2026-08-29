@@ -95,12 +95,38 @@ def assemble_final_summary_context(
         )
     )
     task_payloads = []
+    tasks_by_week: dict[int | None, list[dict[str, Any]]] = {}
     for assignment in assignments:
         payload = _assignment_payload(assignment=assignment, today=today)
         week = assignment.task.roadmap_week
-        payload["week_number"] = week.week_number if week else None
+        week_number = week.week_number if week else None
+        payload["week_number"] = week_number
         payload["week_id"] = week.id if week else None
         task_payloads.append(payload)
+        tasks_by_week.setdefault(week_number, []).append(
+            {
+                "title": payload.get("title") or "",
+                "status": payload.get("status") or "",
+                "is_completed": bool(payload.get("is_completed")),
+                "requirement_type": payload.get("requirement_type") or "",
+                "score": payload.get("score"),
+                "difficulty": payload.get("difficulty") or "",
+                "deliverable": payload.get("deliverable") or "",
+            }
+        )
+
+    weeks_and_tasks_payload: list[dict[str, Any]] = []
+    for week in weeks_payload:
+        week_number = week["week_number"]
+        weeks_and_tasks_payload.append(
+            {
+                "week_number": week_number,
+                "weekly_focus": week.get("weekly_focus") or "",
+                "start_date": week.get("start_date"),
+                "end_date": week.get("end_date"),
+                "tasks": tasks_by_week.get(week_number, []),
+            }
+        )
 
     scored = [item["score"] for item in task_payloads if item["score"] is not None]
     approved_weekly = (
@@ -184,6 +210,7 @@ def assemble_final_summary_context(
             else None
         ),
         "weeks": weeks_payload,
+        "weeks_and_tasks": weeks_and_tasks_payload,
         "tasks": task_payloads,
         "weekly_reports": weekly_payloads,
         "score_context": {
@@ -220,7 +247,9 @@ def assemble_final_summary_context(
             "approved_weekly_reports_are_supporting_only": True,
             "underlying_task_records_are_authoritative": True,
             "mentor_comments_and_notes_are_manual": True,
-            "generate_only_five_sections": True,
+            "generate_introduction_and_training_summary": True,
+            "generate_weeks_and_tasks_breakdown": True,
+            "generate_required_summary_sections": True,
         },
         "unavailable_data": unavailable,
         "skill_level_labels": SKILL_LEVEL_LABELS,

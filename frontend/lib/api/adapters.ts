@@ -287,17 +287,39 @@ export function adaptWeeklyReport(raw: any): WeeklyReport {
 }
 
 export function adaptFinalSummary(raw: any): FinalSummary {
+  const weeksAndTasks = Array.isArray(raw.weeks_and_tasks)
+    ? raw.weeks_and_tasks.map((week: any) => ({
+        weekNumber: Number(week.week_number ?? week.weekNumber ?? 0),
+        weeklyFocus: week.weekly_focus || week.weeklyFocus || "",
+        tasks: Array.isArray(week.tasks)
+          ? week.tasks.map((task: any) => ({
+              title: task.title || "",
+              status: task.status || "",
+              isCompleted: Boolean(task.is_completed ?? task.isCompleted),
+              requirementType: task.requirement_type || task.requirementType || "",
+              score:
+                task.score === null || task.score === undefined
+                  ? null
+                  : Number(task.score),
+            }))
+          : [],
+      }))
+    : [];
+
   return {
     id: String(raw.id),
     internProfileId: String(raw.intern?.id ?? raw.intern),
     programId: String(raw.program?.id ?? raw.program),
     status: raw.status,
     content: {
+      introduction: raw.introduction || "",
+      trainingSummary: raw.training_summary || "",
       overallPerformanceSummary: raw.overall_performance_summary || "",
       learningJourney: raw.learning_journey || "",
       mainAchievements: raw.main_achievements || [],
       goalAchievement: raw.goal_achievement || "",
       finalPerformanceSummary: raw.final_performance_summary || "",
+      weeksAndTasks,
     },
     mentorFinalScore:
       raw.final_score === null || raw.final_score === undefined
