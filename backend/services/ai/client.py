@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -15,6 +16,8 @@ from services.ai.exceptions import (
     AIServiceError,
     AITimeoutError,
 )
+
+logger = logging.getLogger("ai.generation")
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -69,16 +72,31 @@ def parse_structured(
 
     parsed = getattr(response, "output_parsed", None)
     if parsed is None:
-        refusal = None
+        # Log the raw text so it's visible in the server terminal for debugging.
+        raw_text: str | None = None
         try:
-            refusal = getattr(response, "output_text", None)
+            raw_text = getattr(response, "output_text", None)
         except Exception:  # noqa: BLE001
-            refusal = None
+            raw_text = None
+
+        if raw_text:
+            logger.warning(
+                "ai_client output_parsed=None for model=%s. "
+                "Raw output_text (first 500 chars): %s",
+                model,
+                raw_text[:500],
+            )
+        else:
+            logger.warning(
+                "ai_client output_parsed=None and output_text is empty for model=%s. "
+                "Full response output items: %s",
+                model,
+                getattr(response, "output", "N/A"),
+            )
+
         from services.ai.exceptions import AIInvalidOutputError
 
         raise AIInvalidOutputError(
             "AI roadmap generation could not produce a valid roadmap. Please try again."
-            if not refusal
-            else "AI roadmap generation could not produce a valid roadmap. Please try again."
         )
     return parsed

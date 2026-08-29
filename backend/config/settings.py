@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-load_dotenv(BASE_DIR.parent / ".env")
+load_dotenv(BASE_DIR/ ".env")
 
 SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY",
@@ -130,7 +130,7 @@ SIMPLE_JWT = {
     "UPDATE_LAST_LOGIN": True,
 }
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # True in local dev only; explicit origins list used in production.
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
     for origin in os.getenv(
@@ -139,6 +139,7 @@ CORS_ALLOWED_ORIGINS = [
     ).split(",")
     if origin.strip()
 ]
+# In production (DEBUG=False), CORS_ALLOW_ALL_ORIGINS is False and the list above is enforced.
 CORS_ALLOW_CREDENTIALS = True
 
 MAX_UPLOAD_SIZE_BYTES = 20 * 1024 * 1024
@@ -191,6 +192,13 @@ LOGGING = {
         "ai.generation": {
             "handlers": ["console"],
             "level": "INFO",
+            "propagate": False,
+        },
+        # Captures detailed validation/response debug output — set to WARNING in
+        # production to suppress noisy output; DEBUG locally to surface failures.
+        "ai.generation.debug": {
+            "handlers": ["console"],
+            "level": "DEBUG",
             "propagate": False,
         },
     },

@@ -10,6 +10,7 @@ from apps.programs.models import InternshipProgram, InternProfile, ProgramRefere
 from common.constants import RoadmapScope
 from services.ai.exceptions import AIPermissionError, AIValidationError
 from services.ai.reference_extractor import extract_reference_material
+from services.ai.validators import week_boundaries
 
 SKILL_LEVEL_LABELS = {
     1: "Beginner",
@@ -119,6 +120,34 @@ def resolve_scope_interns(
     raise AIValidationError("Invalid roadmap scope.")
 
 
+def _build_week_schedule(
+    start: date | None,
+    end: date | None,
+    duration_weeks: int,
+) -> list[dict[str, str]]:
+    """
+    Pre-compute the exact week date windows the validator will enforce.
+
+    This is the single source of truth for week boundaries — both the AI prompt
+    and the validator call the same week_boundaries() function so they can never
+    disagree on which dates are valid for each week.
+    """
+    if not start or not end or duration_weeks < 1:
+        return []
+    schedule = []
+    for w in range(1, duration_weeks + 1):
+        ws, we = week_boundaries(start, end, w, duration_weeks)
+        schedule.append(
+            {
+                "week_number": w,
+                "start_date": ws.isoformat(),
+                "end_date": we.isoformat(),
+                "due_dates_must_be_between": f"{ws.isoformat()} and {we.isoformat()} inclusive",
+            }
+        )
+    return schedule
+
+
 def _normalize_focus_skills(
     *,
     assignment_scope: str,
@@ -156,6 +185,14 @@ def assemble_roadmap_context(
     focus_skills = _normalize_focus_skills(
         assignment_scope=assignment_scope,
         mentor_focus_skills=mentor_focus_skills,
+    )
+
+    # Pre-compute the authoritative week date windows so the AI prompt and
+    # the validator are guaranteed to use identical boundaries.
+    week_schedule = _build_week_schedule(
+        program.start_date,
+        program.end_date,
+        program.duration_weeks,
     )
 
     unavailable: list[str] = []
@@ -210,6 +247,8 @@ def assemble_roadmap_context(
         "interns": intern_payloads,
         "mentor_focus_skills": focus_skills,
         "reference_materials": materials,
+        # Authoritative week schedule — task due_dates must fall within these windows.
+        "week_schedule": week_schedule,
         "constraints": {
             "duration_weeks": program.duration_weeks,
             "weekly_hours": program.weekly_hours,

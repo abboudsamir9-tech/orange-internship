@@ -180,6 +180,35 @@ def _quality_and_self_check() -> str:
     )
 
 
+def _week_schedule_block(context: dict[str, Any]) -> str:
+    """
+    Emit the pre-computed, authoritative week date windows.
+
+    These are the EXACT same boundaries the validator enforces — every task
+    due_date MUST fall within the listed window for its week or validation fails.
+    Do NOT infer week dates from program start/end yourself; use this table only.
+    """
+    schedule = context.get("week_schedule") or []
+    if not schedule:
+        return (
+            "Week date windows are not available. "
+            "Use program start/end dates and duration to infer boundaries.\n"
+        )
+    lines = [
+        "IMPORTANT: These are the only valid due-date ranges per week.",
+        "A task in Week N MUST have its due_date between that week's start_date "
+        "and end_date (inclusive) as listed below.",
+        "Do NOT use your own calendar arithmetic — use this table exactly.\n",
+    ]
+    for entry in schedule:
+        lines.append(
+            f"  Week {entry['week_number']}: "
+            f"due_date must be >= {entry['start_date']} "
+            f"and <= {entry['end_date']}"
+        )
+    return "\n".join(lines) + "\n"
+
+
 def build_final_roadmap_generation_prompt(
     *,
     context: dict[str, Any],
@@ -218,6 +247,10 @@ def build_final_roadmap_generation_prompt(
         _section(
             "REFERENCE MATERIAL",
             _reference_block(context.get("reference_materials") or []),
+        ),
+        _section(
+            "AUTHORITATIVE WEEK DATE WINDOWS — TASK DUE DATES MUST USE THESE EXACTLY",
+            _week_schedule_block(context),
         ),
         _section(
             "MENTOR-REQUESTED SKILLS TO FOCUS ON",

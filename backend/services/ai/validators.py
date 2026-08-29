@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from datetime import date, timedelta
 from typing import Any
 
 from services.ai.exceptions import AIInvalidOutputError
 from services.ai.schemas import GeneratedRoadmap
+
+logger = logging.getLogger("ai.generation")
 
 VALID_DIFFICULTIES = {"EASY", "MEDIUM", "HARD"}
 VALID_REQUIREMENTS = {"REQUIRED", "OPTIONAL"}
@@ -26,7 +29,7 @@ def _parse_date(value: str) -> date:
         return date.fromisoformat(value)
     except Exception as exc:  # noqa: BLE001
         raise AIInvalidOutputError(
-            "AI roadmap generation could not produce a valid roadmap. Please try again."
+            f"AI returned an unparseable date value: {value!r}. Please try again."
         ) from exc
 
 
@@ -41,11 +44,12 @@ def sanitize_roadmap_title(title: str) -> str:
     # Reject titles that still lead with a bare status token after cleanup attempts.
     if re.match(r"^(DRAFT|PUBLISHED|ARCHIVED)\b", cleaned, re.IGNORECASE):
         raise AIInvalidOutputError(
-            "AI roadmap generation could not produce a valid roadmap. Please try again."
+            f"Roadmap title still starts with a status word after sanitization: {cleaned!r}. "
+            "Please try again."
         )
     if not cleaned:
         raise AIInvalidOutputError(
-            "AI roadmap generation could not produce a valid roadmap. Please try again."
+            "AI returned an empty roadmap title. Please try again."
         )
     return cleaned
 
@@ -53,7 +57,9 @@ def sanitize_roadmap_title(title: str) -> str:
 def week_boundaries(program_start: date, program_end: date, week_number: int, total_weeks: int):
     """Deterministic week window used for due-date validation."""
     if total_weeks < 1:
-        raise AIInvalidOutputError()
+        raise AIInvalidOutputError(
+            "Program has fewer than 1 week — cannot compute week boundaries."
+        )
     span_days = max((program_end - program_start).days, 0)
     week_length = max(span_days // total_weeks, 1)
     start = program_start + timedelta(days=(week_number - 1) * week_length)
@@ -85,14 +91,16 @@ def _reject_program_named_assignees(roadmap: GeneratedRoadmap, context: dict[str
                 for name in intern_names:
                     if f"{name.lower()} (lead)" in lowered or f"{name.lower()}(lead)" in lowered:
                         raise AIInvalidOutputError(
-                            "AI roadmap generation could not produce a valid roadmap. Please try again."
+                            f"PROGRAM-scope task {task.title!r} in week {week.week_number} "
+                            f"names an individual intern as lead: {name!r}. Please try again."
                         )
                 continue
             lowered = blob.lower()
             for name in intern_names:
                 if name.lower() in lowered:
                     raise AIInvalidOutputError(
-                        "AI roadmap generation could not produce a valid roadmap. Please try again."
+                        f"PROGRAM-scope task {task.title!r} in week {week.week_number} "
+                        f"assigns individual intern {name!r} as owner. Please try again."
                     )
 
 
@@ -103,7 +111,8 @@ def _reject_obvious_duplicate_tasks(roadmap: GeneratedRoadmap) -> None:
             key = re.sub(r"\s+", " ", task.title.strip().lower())
             if key in seen:
                 raise AIInvalidOutputError(
-                    "AI roadmap generation could not produce a valid roadmap. Please try again."
+                    f"Duplicate task title detected: {task.title!r} "
+                    f"(week {week.week_number}). Please try again."
                 )
             seen.add(key)
 
@@ -123,56 +132,116 @@ def validate_generated_roadmap(
 
     if roadmap.number_of_weeks != duration_weeks:
         raise AIInvalidOutputError(
-            "AI roadmap generation could not produce a valid roadmap. Please try again."
+            f"AI returned number_of_weeks={roadmap.number_of_weeks} but program "
+            f"duration_weeks={duration_weeks}. Please try again."
         )
-    if not roadmap.title.strip() or not roadmap.summary.strip():
-        raise AIInvalidOutputError()
+    if not roadmap.title.strip():
+        raise AIInvalidOutputError(
+            "AI returned an empty roadmap title. Please try again."
+        )
+    if not roadmap.summary.strip():
+        raise AIInvalidOutputError(
+            "AI returned an empty roadmap summary. Please try again."
+        )
     if len(roadmap.weeks) != duration_weeks:
-        raise AIInvalidOutputError()
+        raise AIInvalidOutputError(
+            f"AI returned {len(roadmap.weeks)} weeks but program requires "
+            f"{duration_weeks}. Please try again."
+        )
 
     seen_weeks: set[int] = set()
     for week in roadmap.weeks:
         if week.week_number in seen_weeks:
-            raise AIInvalidOutputError()
+            raise AIInvalidOutputError(
+                f"Duplicate week_number {week.week_number} in AI output. Please try again."
+            )
         seen_weeks.add(week.week_number)
         if week.week_number < 1 or week.week_number > duration_weeks:
-            raise AIInvalidOutputError()
+            raise AIInvalidOutputError(
+                f"Week number {week.week_number} is out of range "
+                f"(1–{duration_weeks}). Please try again."
+            )
         if not week.weekly_focus.strip():
-            raise AIInvalidOutputError()
+            raise AIInvalidOutputError(
+                f"Week {week.week_number} has an empty weekly_focus. Please try again."
+            )
         if not week.learning_objectives or not all(
             isinstance(item, str) and item.strip() for item in week.learning_objectives
         ):
-            raise AIInvalidOutputError()
+            raise AIInvalidOutputError(
+                f"Week {week.week_number} has missing or empty learning_objectives. "
+                "Please try again."
+            )
         if not week.expected_skills_gained or not all(
             isinstance(item, str) and item.strip() for item in week.expected_skills_gained
         ):
-            raise AIInvalidOutputError()
+            raise AIInvalidOutputError(
+                f"Week {week.week_number} has missing or empty expected_skills_gained. "
+                "Please try again."
+            )
         if not week.tasks:
-            raise AIInvalidOutputError()
+            raise AIInvalidOutputError(
+                f"Week {week.week_number} has no tasks. Please try again."
+            )
 
         week_start, week_end = week_boundaries(
             program_start, program_end, week.week_number, duration_weeks
         )
         for task in week.tasks:
-            if not task.title.strip() or not task.description.strip():
-                raise AIInvalidOutputError()
+            if not task.title.strip():
+                raise AIInvalidOutputError(
+                    f"A task in week {week.week_number} has an empty title. Please try again."
+                )
+            if not task.description.strip():
+                raise AIInvalidOutputError(
+                    f"Task {task.title!r} in week {week.week_number} has an empty description. "
+                    "Please try again."
+                )
             if task.difficulty not in VALID_DIFFICULTIES:
-                raise AIInvalidOutputError()
+                raise AIInvalidOutputError(
+                    f"Task {task.title!r} in week {week.week_number} has invalid difficulty "
+                    f"{task.difficulty!r}. Must be EASY, MEDIUM, or HARD. Please try again."
+                )
             if task.requirement_type not in VALID_REQUIREMENTS:
-                raise AIInvalidOutputError()
+                raise AIInvalidOutputError(
+                    f"Task {task.title!r} in week {week.week_number} has invalid requirement_type "
+                    f"{task.requirement_type!r}. Must be REQUIRED or OPTIONAL. Please try again."
+                )
             if task.estimated_time_minutes <= 0:
-                raise AIInvalidOutputError()
-            if not task.deliverable.strip() or not task.success_criteria.strip():
-                raise AIInvalidOutputError()
+                raise AIInvalidOutputError(
+                    f"Task {task.title!r} in week {week.week_number} has invalid "
+                    f"estimated_time_minutes={task.estimated_time_minutes}. "
+                    "Must be a positive integer. Please try again."
+                )
+            if not task.deliverable.strip():
+                raise AIInvalidOutputError(
+                    f"Task {task.title!r} in week {week.week_number} has an empty deliverable. "
+                    "Please try again."
+                )
+            if not task.success_criteria.strip():
+                raise AIInvalidOutputError(
+                    f"Task {task.title!r} in week {week.week_number} has empty success_criteria. "
+                    "Please try again."
+                )
             due = _parse_date(task.due_date)
             if due < program_start or due > program_end:
-                raise AIInvalidOutputError()
+                raise AIInvalidOutputError(
+                    f"Task {task.title!r} in week {week.week_number} has due_date={task.due_date} "
+                    f"outside program range {program_start}–{program_end}. Please try again."
+                )
             if due < week_start or due > week_end:
-                raise AIInvalidOutputError()
+                raise AIInvalidOutputError(
+                    f"Task {task.title!r} has due_date={task.due_date} which falls outside "
+                    f"week {week.week_number}'s allowed window "
+                    f"({week_start}–{week_end}). Please try again."
+                )
 
     expected = set(range(1, duration_weeks + 1))
     if seen_weeks != expected:
-        raise AIInvalidOutputError()
+        missing = expected - seen_weeks
+        raise AIInvalidOutputError(
+            f"Missing week numbers in AI output: {sorted(missing)}. Please try again."
+        )
 
     _reject_program_named_assignees(roadmap, context)
     _reject_obvious_duplicate_tasks(roadmap)

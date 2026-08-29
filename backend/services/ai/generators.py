@@ -65,6 +65,13 @@ def generate_roadmap_structure(
             "title_must_not_include": ["DRAFT", "PUBLISHED", "ARCHIVED"],
             "program_scope_forbids_named_assignees": context.get("roadmap_scope")
             == "PROGRAM",
+            # Surface the pre-computed week windows here too so the AI sees them
+            # in the output_requirements alongside the prompt.
+            "authoritative_week_due_date_windows": context.get("week_schedule") or [],
+            "due_date_rule": (
+                "Each task's due_date MUST fall within the authoritative_week_due_date_windows "
+                "entry for that task's week_number. Do not use your own date arithmetic."
+            ),
         },
     }
     messages = [

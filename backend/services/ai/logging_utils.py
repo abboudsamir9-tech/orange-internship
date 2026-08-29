@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from typing import Iterator
 
 logger = logging.getLogger("ai.generation")
+debug_logger = logging.getLogger("ai.generation.debug")
 
 
 @contextmanager
@@ -36,6 +37,15 @@ def generation_timer(
     except Exception as exc:  # noqa: BLE001
         category = getattr(exc, "category", "unexpected")
         event["error_category"] = category
+        # Log the full user_message so the exact validator failure is visible in the terminal.
+        logger.warning(
+            "ai_generation_error feature=%s category=%s error=%s user_id=%s program_id=%s",
+            event.get("feature_type"),
+            category,
+            getattr(exc, "user_message", str(exc)),
+            event.get("user_id"),
+            event.get("program_id"),
+        )
         raise
     finally:
         event["duration_ms"] = int((time.monotonic() - started) * 1000)
