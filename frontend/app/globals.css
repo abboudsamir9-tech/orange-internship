@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-brand: #f97316;
+  --color-brand-dark: #c2410c;
+  --color-brand-light: #ffedd5;
+  --color-brand-soft: #fff7ed;
+  --color-ink: #1f2937;
+  --color-ink-muted: #6b7280;
+  --color-line: #e5e7eb;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f9fafb;
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-brand-soft font-sans text-ink antialiased;
+  }
+
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-card;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-dark focus-visible:outline-brand;
+  }
+
+  .btn-secondary {
+    @apply btn border border-line bg-white text-ink hover:bg-surface-muted focus-visible:outline-brand;
+  }
+
+  .btn-ghost {
+    @apply btn text-ink-muted hover:bg-brand-light hover:text-brand-dark;
+  }
+
+  .btn-danger {
+    @apply btn bg-danger text-white hover:bg-red-700;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-brand focus:ring-2 focus:ring-orange-200;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold tracking-tight text-ink;
+  }
+}
+
+@layer utilities {
+  @keyframes roadmap-logo-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes roadmap-ring-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-roadmap-logo-breathe {
+    animation: roadmap-logo-breathe 2.4s ease-in-out infinite;
+  }
+
+  .animate-roadmap-ring-spin {
+    animation: roadmap-ring-spin 1.25s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-roadmap-logo-breathe,
+    .animate-roadmap-ring-spin {
+      animation: none;
+    }
+  }
+}

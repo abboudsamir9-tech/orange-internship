@@ -1,0 +1,25 @@
+{
+  "_comment": "Placeholder output schema. Not implemented.",
+  "roadmap_title": "",
+  "roadmap_summary": "",
+  "number_of_weeks": 0,
+  "weeks": [
+    {
+      "week_number": 1,
+      "weekly_focus": "",
+      "weekly_learning_objectives": [],
+      "suggested_tasks": [
+        {
+          "title": "",
+          "description": "",
+          "difficulty": "",
+          "estimated_time": "",
+          "deliverable": "",
+          "success_criteria": ""
+        }
+      ],
+      "expected_skills_gained": [],
+      "mentor_notes": ""
+    }
+  ]
+}
